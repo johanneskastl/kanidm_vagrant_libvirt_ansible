@@ -1,0 +1,14 @@
+---
+- name: 'Add the network:idm zypper repository'
+  hosts: 'all'
+  gather_facts: true
+  become: true
+
+  roles:
+
+    - role: 'johanneskastl.add_zypper_repository'
+      repository_name: 'network-idm'
+      repository_baseurl: "https://download.opensuse.org/repositories/network:/idm/{{ ansible_distribution_version }}/"
+      auto_import_keys: '1'
+      when:
+        - ansible_distribution == "openSUSE Leap"
