@@ -29,3 +29,6 @@
 
 - name: 'Run playbook-all_nodes-add_network-idm_repository.yml'
   ansible.builtin.import_playbook: playbook-all_nodes-add_network-idm_repository.yml
+
+- name: 'Run playbook-server-install_kandim_server_and_tools.yml'
+  ansible.builtin.import_playbook: playbook-server-install_kandim_server_and_tools.yml
