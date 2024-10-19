@@ -35,3 +35,6 @@
 
 - name: 'Run playbook-server-install_kandim_server_and_tools.yml'
   ansible.builtin.import_playbook: playbook-server-install_kandim_server_and_tools.yml
+
+- name: 'Run playbook-server-configure_and_start_kanidmd.yml'
+  ansible.builtin.import_playbook: playbook-server-configure_and_start_kanidmd.yml
