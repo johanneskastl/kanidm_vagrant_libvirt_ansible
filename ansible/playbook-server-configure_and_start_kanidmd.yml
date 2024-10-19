@@ -98,3 +98,21 @@
         name: 'kanidmd'
         enabled: true
         daemon_reload: true
+
+    - name: 'Run kanidm recover-account admin'
+      ansible.builtin.command:
+        # run using sudo, as Ansible's become does not work from the vagrant user
+        cmd: 'sudo -u kanidm kanidmd recover-account admin'
+      register: kanidm_reset_admin_password
+
+    - debug:
+        msg: "The new admin password is: {{ kanidm_reset_admin_password.stdout | regex_search('new_password:\\s\\\"(.*)\"', '\\1') | first }}"
+
+    - name: 'Run kanidm recover-account idm_admin'
+      ansible.builtin.command:
+        # run using sudo, as Ansible's become does not work from the vagrant user
+        cmd: 'sudo -u kanidm kanidmd recover-account idm_admin'
+      register: kanidm_reset_idm_admin_password
+
+    - debug:
+        msg: "The new idm_admin password is: {{ kanidm_reset_idm_admin_password.stdout | regex_search('new_password:\\s\\\"(.*)\"', '\\1') | first }}"
