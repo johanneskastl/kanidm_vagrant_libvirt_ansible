@@ -1,0 +1,100 @@
+---
+- name: 'Configure and start kanidmd'
+  hosts: 'kanidm-server'
+  gather_facts: true
+  become: true
+
+  handlers:
+
+    - name: 'Restart the kanidmd service'
+      ansible.builtin.systemd:
+        name: 'kanidmd'
+        state: 'restarted'
+        daemon_reload: true
+      when:
+        - 'not (start_the_kanidm_service.changed | bool)'
+
+  tasks:
+
+    - name: 'Install ACL package to work around "temporary files" errors in Ansible'
+      ansible.builtin.package:
+        name: 'acl'
+        state: 'present'
+
+    - name: 'Add kanidm group'
+      ansible.builtin.group:
+        name: 'kanidm'
+
+    - name: 'Add kanidm user'
+      ansible.builtin.user:
+        name: 'kanidm'
+        group: 'kanidm'
+        shell: '/usr/sbin/nologin'
+        create_home: false
+
+    - name: 'Create /etc/systemd/system/kanidmd.service.d/'
+      ansible.builtin.file:
+        path: '/etc/systemd/system/kanidmd.service.d/'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: '0755'
+
+    - name: 'Create /etc/systemd/system/kanidmd.service.d/run_as_nonroot_user.conf'
+      ansible.builtin.template:
+        src: 'run_as_nonroot_user.conf.j2'
+        dest: '/etc/systemd/system/kanidmd.service.d/run_as_nonroot_user.conf'
+        owner: 'root'
+        group: 'root'
+        mode: '644'
+
+    - name: 'Create /var/lib/kanidm/'
+      ansible.builtin.file:
+        path: '/var/lib/kanidm/'
+        state: 'directory'
+        owner: 'kanidm'
+        group: 'kanidm'
+        mode: '0750'
+
+    - name: 'Make sure the permissions on /etc/kanidm/ are strict enough'
+      ansible.builtin.file:
+        path: '/etc/kanidm/'
+        state: 'directory'
+        owner: 'root'
+        group: 'kanidm'
+        mode: '0750'
+
+    - name: 'Create server.toml'
+      ansible.builtin.template:
+        src: 'server.toml.j2'
+        dest: '/etc/kanidm/server.toml'
+        owner: 'root'
+        group: 'root'
+        mode: '644'
+      notify:
+        - 'Restart the kanidmd service'
+
+    - name: 'Run kanidm cert-generate'
+      ansible.builtin.command:
+        # run using sudo, as Ansible's become does not work from the vagrant user
+        cmd: 'sudo -u kanidm kanidmd cert-generate'
+        creates: '/var/lib/kanidm/key.pem'
+
+    - name: 'Run kanidm configtest'
+      ansible.builtin.command:
+        # run using sudo, as Ansible's become does not work from the vagrant user
+        cmd: 'sudo -u kanidm kanidmd configtest'
+      changed_when: false
+
+    - name: 'Start the kanidmd service'
+      ansible.builtin.systemd:
+        name: 'kanidmd'
+        state: 'started'
+        daemon_reload: true
+      register: start_the_kanidm_service
+
+    - name: 'Enable the kanidmd service'
+      ansible.builtin.systemd:
+        name: 'kanidmd'
+        enabled: true
+        daemon_reload: true
