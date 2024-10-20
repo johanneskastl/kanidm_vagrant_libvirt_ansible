@@ -1,0 +1,46 @@
+---
+
+- name: 'Gather facts'
+  hosts: 'all'
+  gather_facts: true
+  become: true
+
+- name: 'Configure kanidm'
+  hosts: 'kanidm-client'
+  gather_facts: true
+  become: true
+
+  tasks:
+
+    - name: 'Create /root/.config/'
+      ansible.builtin.file:
+        path: '/root/.config/'
+        state: 'directory'
+        owner: 'root'
+        group: 'root'
+        mode: '0700'
+
+    - name: 'Create /root/.config/kanidm'
+      ansible.builtin.template:
+        src: 'config_kanidm.j2'
+        dest: '/root/.config/kanidm'
+        owner: 'root'
+        group: 'root'
+        mode: '0600'
+
+    - name: 'Create /home/vagrant/.config/'
+      ansible.builtin.file:
+        path: '/home/vagrant/.config/'
+        state: 'directory'
+        owner: 'vagrant'
+        group: 'vagrant'
+        mode: '0700'
+
+    - name: 'Create /home/vagrant/.config/kanidm'
+      ansible.builtin.template:
+        src: 'config_kanidm.j2'
+        dest: '/home/vagrant/.config/kanidm'
+        owner: 'vagrant'
+        group: 'vagrant'
+        mode: '0600'
+      become: false
